@@ -3,10 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Rozora Malang - Pro V2</title>
+  <title>Rozora Malang - Pro V3.2</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- PDF Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -35,21 +38,15 @@
   <div id="app" class="min-h-full w-full">
     <div id="toast-container" class="fixed top-4 right-4 z-[60] space-y-2"></div>
 
-    <!-- Auth Pages -->
+    <!-- Auth Container -->
     <div id="auth-container" class="min-h-full flex items-center justify-center p-4">
       <div id="login-page" class="w-full max-w-md">
         <div class="glass rounded-3xl p-8 glow text-center">
-          <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 overflow-hidden">
-            <img src="rzrmlg.jpeg" alt="Logo" class="w-full h-full object-cover">
-          </div>
-          <h1 class="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Rozora Malang</h1>
+          <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 overflow-hidden"><img src="rzrmlg.jpeg" alt="Logo" class="w-full h-full object-cover"></div>
+          <h1 class="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent text-">Rozora Malang</h1>
           <form id="login-form" class="space-y-4 mt-8 text-left">
-            <div><label class="block text-sm font-medium text-gray-300 mb-2">Email</label>
-              <input type="email" id="login-email" required class="w-full bg-dark/50 border border-gray-700 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-primary transition-all">
-            </div>
-            <div><label class="block text-sm font-medium text-gray-300 mb-2">Password</label>
-              <input type="password" id="login-password" required class="w-full bg-dark/50 border border-gray-700 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-primary transition-all">
-            </div>
+            <input type="email" id="login-email" placeholder="Email" required class="w-full bg-dark/50 border border-gray-700 rounded-xl py-3 px-4 text-white">
+            <input type="password" id="login-password" placeholder="Password" required class="w-full bg-dark/50 border border-gray-700 rounded-xl py-3 px-4 text-white">
             <button type="submit" class="w-full bg-gradient-to-r from-primary to-secondary font-semibold py-3 rounded-xl hover:scale-[1.02] transition-all">Masuk</button>
           </form>
           <p class="text-gray-400 mt-6 text-sm">Belum punya akun? <button onclick="showRegister()" class="text-primary font-medium">Daftar</button></p>
@@ -69,7 +66,7 @@
       </div>
     </div>
 
-    <!-- Dashboard -->
+    <!-- Dashboard Container -->
     <div id="dashboard-container" class="min-h-full hidden pb-20">
       <header class="glass sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -78,86 +75,75 @@
             <h1 class="text-xl font-bold hidden sm:block">Rozora Malang</h1>
           </div>
           <div class="flex items-center gap-2">
-            <button onclick="showSettingsModal()" class="p-2 bg-primary/20 hover:bg-primary/30 text-primary-400 rounded-xl transition-all">
-                <i data-lucide="settings" class="w-5 h-5"></i>
-            </button>
-            <button onclick="logout()" class="flex items-center gap-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 px-4 py-2 rounded-xl transition-all">
-                <i data-lucide="log-out" class="w-4 h-4"></i> <span class="hidden sm:inline">Keluar</span>
-            </button>
+            <button onclick="showSettingsModal()" class="p-2 bg-primary/20 text-primary-400 rounded-xl hover:bg-primary/30 transition-all"><i data-lucide="settings" class="w-5 h-5"></i></button>
+            <button onclick="logout()" class="flex items-center gap-2 bg-red-500/20 text-red-400 px-4 py-2 rounded-xl hover:bg-red-500/30 transition-all"><i data-lucide="log-out" class="w-4 h-4"></i> <span class="hidden sm:inline text-sm">Keluar</span></button>
           </div>
         </div>
       </header>
 
       <main class="max-w-7xl mx-auto px-4 py-8">
-        <!-- Main Stats -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 text-center sm:text-left">
           <div class="glass rounded-2xl p-5 border-l-4 border-green-500">
-            <span id="income-label" class="text-gray-400 text-xs uppercase">Pendapatan Bulan Ini</span>
+            <span id="income-label" class="text-gray-400 text-[10px] uppercase font-bold tracking-wider">Pendapatan</span>
             <p id="monthly-income" class="text-2xl font-bold text-green-400">Rp 0</p>
           </div>
           <div class="glass rounded-2xl p-5 border-l-4 border-blue-500">
-            <span class="text-gray-400 text-xs uppercase">Reguler / Private</span>
-            <p class="text-xl font-bold"><span id="total-regular" class="text-blue-400">0</span> / <span id="total-private" class="text-purple-400">0</span></p>
+            <span class="text-gray-400 text-[10px] uppercase font-bold tracking-wider">Reg / Priv / Spec</span>
+            <p class="text-xl font-bold"><span id="total-regular" class="text-blue-400">0</span> / <span id="total-private" class="text-purple-400">0</span> / <span id="total-special" class="text-amber-400">0</span></p>
           </div>
           <div class="glass rounded-2xl p-5 border-l-4 border-orange-500">
-            <span class="text-gray-400 text-xs uppercase">Trial (R / P)</span>
+            <span class="text-gray-400 text-[10px] uppercase font-bold tracking-wider">Trial (R / P)</span>
             <p class="text-xl font-bold"><span id="total-trial-reg" class="text-orange-400">0</span> / <span id="total-trial-priv" class="text-red-400">0</span></p>
           </div>
           <div class="glass rounded-2xl p-5 border-l-4 border-indigo-500">
-            <span class="text-gray-400 text-xs uppercase">Extra (Training/GC)</span>
-            <p id="total-extra" class="text-xl font-bold text-indigo-400">Rp 0</p>
+            <span class="text-gray-400 text-[10px] uppercase font-bold tracking-wider">GC / Training</span>
+            <p class="text-xl font-bold"><span id="total-gc" class="text-indigo-400">0</span> / <span id="total-training" class="text-pink-400">0</span></p>
           </div>
         </div>
 
-        <!-- Yearly Chart -->
         <div class="glass rounded-2xl p-6 mb-8">
-            <h3 class="font-bold mb-4 flex items-center gap-2"><i data-lucide="line-chart" class="text-primary"></i> Tren Tahunan</h3>
+            <h3 class="font-bold mb-4 flex items-center gap-2"><i data-lucide="line-chart" class="text-primary"></i> Tren Pendapatan</h3>
             <div class="h-[250px] w-full"><canvas id="incomeChart"></canvas></div>
         </div>
 
         <!-- Input Form -->
         <div class="glass rounded-2xl p-6 mb-8">
-          <h2 class="text-xl font-bold mb-6 flex items-center gap-2"><i data-lucide="plus-circle" class="text-primary"></i> <span id="form-title">Input Kelas</span></h2>
-          <form id="salary-form" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4">
+          <h2 class="text-xl font-bold mb-6 flex items-center gap-2 text-primary"><i data-lucide="plus-circle"></i> <span id="form-title">Input Kelas</span></h2>
+          <form id="salary-form" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
             <input type="hidden" id="edit-id" value="">
-            <div class="col-span-2 lg:col-span-1">
-                <label class="block text-xs text-gray-400 mb-1">Tanggal</label>
-                <input type="date" id="input-date" required class="w-full bg-dark/50 border border-gray-700 rounded-xl p-3 text-white text-sm outline-none">
-            </div>
-            <div><label class="block text-xs text-blue-400 mb-1">Reguler</label><input type="number" id="input-regular" value="0" class="w-full bg-dark/50 border border-gray-700 rounded-xl p-3 text-white text-sm"></div>
-            <div><label class="block text-xs text-purple-400 mb-1">Private</label><input type="number" id="input-private" value="0" class="w-full bg-dark/50 border border-gray-700 rounded-xl p-3 text-white text-sm"></div>
-            <div><label class="block text-xs text-amber-400 mb-1">Spesial</label><input type="number" id="input-special" value="0" class="w-full bg-dark/50 border border-gray-700 rounded-xl p-3 text-white text-sm"></div>
-            <div><label class="block text-xs text-orange-400 mb-1">Trial R</label><input type="number" id="input-trial-reg" value="0" class="w-full bg-dark/50 border border-gray-700 rounded-xl p-3 text-white text-sm"></div>
-            <div><label class="block text-xs text-red-400 mb-1">Trial P/T</label><input type="number" id="input-trial-priv" value="0" class="w-full bg-dark/50 border border-gray-700 rounded-xl p-3 text-white text-sm"></div>
-            <div class="col-span-2 lg:col-span-1 flex items-end gap-2">
-                <button type="submit" id="submit-btn" class="flex-1 bg-primary font-semibold py-3 rounded-xl hover:scale-105 transition-all">Simpan</button>
-                <button type="button" id="cancel-edit-btn" onclick="cancelEdit()" class="hidden bg-gray-700 p-3 rounded-xl"><i data-lucide="x" class="w-5 h-5"></i></button>
+            <div class="col-span-2 lg:col-span-1"><label class="block text-xs text-gray-400 mb-1">Tanggal</label><input type="date" id="input-date" required class="w-full bg-dark/50 border border-gray-700 rounded-xl p-3 text-white text-xs outline-none focus:border-primary"></div>
+            <div><label class="block text-xs text-blue-400 mb-1">Reg</label><input type="number" id="input-regular" value="0" min="0" class="w-full bg-dark/50 border border-gray-700 rounded-xl p-3 text-white text-xs"></div>
+            <div><label class="block text-xs text-purple-400 mb-1">Priv</label><input type="number" id="input-private" value="0" min="0" class="w-full bg-dark/50 border border-gray-700 rounded-xl p-3 text-white text-xs"></div>
+            <div><label class="block text-xs text-amber-400 mb-1">Spec</label><input type="number" id="input-special" value="0" min="0" class="w-full bg-dark/50 border border-gray-700 rounded-xl p-3 text-white text-sm"></div>
+            <div><label class="block text-xs text-orange-400 mb-1">TR-R</label><input type="number" id="input-trial-reg" value="0" min="0" class="w-full bg-dark/50 border border-gray-700 rounded-xl p-3 text-white text-sm"></div>
+            <div><label class="block text-xs text-red-400 mb-1">TR-P</label><input type="number" id="input-trial-priv" value="0" min="0" class="w-full bg-dark/50 border border-gray-700 rounded-xl p-3 text-white text-sm"></div>
+            <div><label class="block text-xs text-indigo-400 mb-1">GC</label><input type="number" id="input-gc" value="0" min="0" class="w-full bg-dark/50 border border-gray-700 rounded-xl p-3 text-white text-sm"></div>
+            <div><label class="block text-xs text-pink-400 mb-1">Trng</label><input type="number" id="input-training" value="0" min="0" class="w-full bg-dark/50 border border-gray-700 rounded-xl p-3 text-white text-sm"></div>
+            <div class="col-span-2 lg:col-span-8 flex justify-end gap-2 mt-2">
+                <button type="button" id="cancel-edit-btn" onclick="cancelEdit()" class="hidden bg-gray-700 px-6 py-3 rounded-xl text-xs">Batal</button>
+                <button type="submit" id="submit-btn" class="bg-primary font-semibold px-10 py-3 rounded-xl hover:scale-105 transition-all text-xs text-white">Simpan Data</button>
             </div>
           </form>
-          <div class="mt-4 p-3 bg-dark/50 rounded-xl flex justify-between items-center">
-            <span class="text-xs text-gray-400">ESTIMASI HARIAN:</span>
-            <span id="estimated-total" class="text-lg font-bold text-green-400">Rp 0</span>
-          </div>
         </div>
 
         <!-- History Table -->
         <div class="glass rounded-2xl p-6">
-          <div class="flex justify-between items-center mb-6">
+          <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
             <h2 class="text-xl font-bold flex items-center gap-2"><i data-lucide="history" class="text-secondary"></i> Riwayat</h2>
-            <div class="flex gap-2">
-                <select id="filter-month" onchange="loadSalaryData()" class="bg-dark/50 border border-gray-700 rounded-lg p-2 text-xs outline-none">
-                    <option value="01">Jan</option><option value="02">Feb</option><option value="03">Mar</option><option value="04">Apr</option><option value="05">Mei</option><option value="06">Jun</option><option value="07">Jul</option><option value="08">Agu</option><option value="09">Sep</option><option value="10">Okt</option><option value="11">Nov</option><option value="12">Des</option>
-                </select>
-                <select id="filter-year" onchange="loadSalaryData()" class="bg-dark/50 border border-gray-700 rounded-lg p-2 text-xs outline-none"></select>
+            <div class="flex flex-wrap justify-center gap-2">
+                <button onclick="generatePDF()" class="bg-green-600/20 text-green-400 border border-green-600/30 px-3 py-2 rounded-lg text-xs font-bold hover:bg-green-600/40 transition-all flex items-center gap-2"><i data-lucide="printer" class="w-4 h-4"></i> Cetak PDF</button>
+                <select id="filter-month" onchange="loadSalaryData()" class="bg-dark/50 border border-gray-700 rounded-lg p-2 text-xs text-white"><option value="01">Jan</option><option value="02">Feb</option><option value="03">Mar</option><option value="04">Apr</option><option value="05">Mei</option><option value="06">Jun</option><option value="07">Jul</option><option value="08">Agu</option><option value="09">Sep</option><option value="10">Okt</option><option value="11">Nov</option><option value="12">Des</option></select>
+                <!-- UPDATE: Dropdown Tahun Otomatis -->
+                <select id="filter-year" onchange="loadSalaryData()" class="bg-dark/50 border border-gray-700 rounded-lg p-2 text-xs text-white"></select>
             </div>
           </div>
-          <div class="overflow-x-auto text-xs">
-            <table class="w-full">
+          <div class="overflow-x-auto text-[10px] sm:text-xs">
+            <table class="w-full text-center">
               <thead>
-                <tr class="border-b border-gray-700 text-gray-400">
-                  <th class="text-left py-4 px-2">Tgl</th>
-                  <th class="text-center">R</th><th class="text-center">P</th><th class="text-center">S</th><th class="text-center">TR</th><th class="text-center">TP</th>
-                  <th class="text-right">Total</th><th class="text-center">Aksi</th>
+                <tr class="border-b border-gray-700 text-gray-400 uppercase">
+                  <th class="text-left py-4 px-2">Tanggal Lengkap</th>
+                  <th>R</th><th>P</th><th>S</th><th>TR</th><th>TP</th><th>GC</th><th>TN</th>
+                  <th class="text-right">Total</th><th>Aksi</th>
                 </tr>
               </thead>
               <tbody id="history-table"></tbody>
@@ -170,50 +156,38 @@
     <!-- Modal Settings -->
     <div id="settings-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
         <div class="glass rounded-3xl p-6 max-w-sm w-full">
-            <h3 class="text-xl font-bold mb-6 flex items-center gap-2"><i data-lucide="sliders" class="text-primary"></i> Atur Tarif</h3>
-            <div class="space-y-4 max-h-[60vh] overflow-auto pr-2">
-                <div class="grid grid-cols-2 gap-3 text-xs">
-                    <div><label class="text-gray-400">Reguler</label><input type="number" id="set-regular" class="w-full bg-dark/50 border border-gray-700 rounded-lg p-2 mt-1"></div>
-                    <div><label class="text-gray-400">Private</label><input type="number" id="set-private" class="w-full bg-dark/50 border border-gray-700 rounded-lg p-2 mt-1"></div>
-                    <div><label class="text-gray-400">Spesial</label><input type="number" id="set-special" class="w-full bg-dark/50 border border-gray-700 rounded-lg p-2 mt-1"></div>
-                    <div><label class="text-gray-400">Trial Reg</label><input type="number" id="set-trial-reg" class="w-full bg-dark/50 border border-gray-700 rounded-lg p-2 mt-1"></div>
-                    <div><label class="text-gray-400">Trial Priv</label><input type="number" id="set-trial-priv" class="w-full bg-dark/50 border border-gray-700 rounded-lg p-2 mt-1"></div>
-                </div>
-                <hr class="border-gray-700">
-                <div class="grid grid-cols-2 gap-3 text-xs">
-                    <div><label class="text-gray-400">Training</label><input type="number" id="set-training" class="w-full bg-dark/50 border border-gray-700 rounded-lg p-2 mt-1"></div>
-                    <div><label class="text-gray-400">GC</label><input type="number" id="set-gc" class="w-full bg-dark/50 border border-gray-700 rounded-lg p-2 mt-1"></div>
-                </div>
+            <h3 class="text-xl font-bold mb-6 flex items-center gap-2 text-primary"><i data-lucide="sliders"></i> Atur Tarif Kelas</h3>
+            <div class="grid grid-cols-2 gap-3 text-xs">
+                <div><label class="text-gray-400">Reguler</label><input type="number" id="set-regular" class="w-full bg-dark/50 border border-gray-700 rounded-lg p-2 mt-1 text-white"></div>
+                <div><label class="text-gray-400">Private</label><input type="number" id="set-private" class="w-full bg-dark/50 border border-gray-700 rounded-lg p-2 mt-1 text-white"></div>
+                <div><label class="text-gray-400">Spesial</label><input type="number" id="set-special" class="w-full bg-dark/50 border border-gray-700 rounded-lg p-2 mt-1 text-white"></div>
+                <div><label class="text-gray-400">Trial Reg</label><input type="number" id="set-trial-reg" class="w-full bg-dark/50 border border-gray-700 rounded-lg p-2 mt-1 text-white"></div>
+                <div><label class="text-gray-400">Trial Priv</label><input type="number" id="set-trial-priv" class="w-full bg-dark/50 border border-gray-700 rounded-lg p-2 mt-1 text-white"></div>
+                <div><label class="text-gray-400">General Class</label><input type="number" id="set-gc" class="w-full bg-dark/50 border border-gray-700 rounded-lg p-2 mt-1 text-white"></div>
+                <div><label class="text-gray-400">Training</label><input type="number" id="set-training" class="w-full bg-dark/50 border border-gray-700 rounded-lg p-2 mt-1 text-white"></div>
             </div>
             <div class="flex gap-3 mt-8">
-                <button onclick="closeSettingsModal()" class="flex-1 bg-gray-700 py-3 rounded-xl">Batal</button>
-                <button onclick="saveRates()" class="flex-1 bg-primary py-3 rounded-xl font-bold">Simpan</button>
+                <button onclick="closeSettingsModal()" class="flex-1 bg-gray-700 py-3 rounded-xl text-sm">Batal</button>
+                <button onclick="saveRates()" class="flex-1 bg-primary py-3 rounded-xl font-bold text-sm text-white">Simpan</button>
             </div>
         </div>
     </div>
 
-    <!-- Modal Hapus -->
+    <!-- Modals & Overlays -->
     <div id="delete-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
         <div class="glass rounded-2xl p-6 max-w-sm w-full text-center">
             <h3 class="text-xl font-bold mb-6">Hapus Data?</h3>
-            <div class="flex gap-3">
-                <button onclick="closeDeleteModal()" class="flex-1 bg-gray-700 py-3 rounded-xl">Batal</button>
-                <button id="confirm-delete-btn" class="flex-1 bg-red-500 py-3 rounded-xl font-bold">Hapus</button>
-            </div>
+            <div class="flex gap-3"><button onclick="closeDeleteModal()" class="flex-1 bg-gray-700 py-3 rounded-xl text-sm">Batal</button><button id="confirm-delete-btn" class="flex-1 bg-red-500 py-3 rounded-xl font-bold text-sm text-white">Hapus</button></div>
         </div>
     </div>
-
     <div id="loading-overlay" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/60 backdrop-blur-sm">
-        <div class="glass rounded-2xl p-8 flex flex-col items-center">
-            <div class="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p class="text-xs">Processing...</p>
-        </div>
+        <div class="glass rounded-2xl p-8 flex flex-col items-center"><div class="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div><p class="text-xs">Processing...</p></div>
     </div>
   </div>
 
   <script>
     // ==========================================
-    // INITIAL SETUP & DATA
+    // INITIAL SETUP
     // ==========================================
     let userRates = { regular: 20000, private: 25000, special: 50000, trial_reg: 15000, trial_priv: 20000, training: 0, gc: 0 };
     const firebaseConfig = {
@@ -229,24 +203,27 @@
 
     function initApp() {
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-        auth = firebase.auth();
-        db = firebase.firestore();
+        auth = firebase.auth(); db = firebase.firestore();
         auth.onAuthStateChanged(async (user) => {
-            if (user) {
-                currentUser = user;
-                await loadRates();
-                showDashboard();
-                loadSalaryData();
-            } else {
-                currentUser = null;
-                showAuth();
-            }
+            if (user) { currentUser = user; await loadRates(); showDashboard(); loadSalaryData(); }
+            else { currentUser = null; showAuth(); }
         });
+
+        document.getElementById('login-form').onsubmit = async (e) => {
+            e.preventDefault(); showLoading(true);
+            try { await auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-password').value); }
+            catch (err) { showToast("Gagal masuk", "error"); } finally { showLoading(false); }
+        };
+
+        document.getElementById('register-form').onsubmit = async (e) => {
+            e.preventDefault(); showLoading(true);
+            try { 
+                const cred = await auth.createUserWithEmailAndPassword(document.getElementById('register-email').value, document.getElementById('register-password').value);
+                await cred.user.updateProfile({ displayName: document.getElementById('register-name').value });
+            } catch (err) { showToast(err.message, "error"); } finally { showLoading(false); }
+        };
     }
 
-    // ==========================================
-    // RATES MANAGEMENT
-    // ==========================================
     async function loadRates() {
         try {
             const doc = await db.collection('settings').doc(currentUser.uid).get();
@@ -277,236 +254,233 @@
         };
         try {
             await db.collection('settings').doc(currentUser.uid).set(newRates);
-            userRates = newRates;
-            showToast("Tarif disimpan!");
-            closeSettingsModal();
-            updateStats();
-            updateEstimatedTotal();
-        } catch (e) { showToast("Gagal simpan", "error"); }
-        finally { showLoading(false); }
+            userRates = newRates; showToast("Tarif disimpan!"); closeSettingsModal(); loadSalaryData(true);
+        } catch (e) { showToast("Gagal simpan", "error"); } finally { showLoading(false); }
     }
 
     // ==========================================
-    // CORE LOGIC (CRUD)
+    // CORE LOGIC (TUTUP BUKU 26-25)
     // ==========================================
-    async function loadSalaryData() {
+    async function loadSalaryData(silent = false) {
         if (!currentUser) return;
-        const filterMonth = document.getElementById('filter-month').value;
-        const filterYear = document.getElementById('filter-year').value;
-        showLoading(true);
+        const filterMonth = parseInt(document.getElementById('filter-month').value);
+        const filterYear = parseInt(document.getElementById('filter-year').value);
+        if(!silent) showLoading(true);
+        
         try {
-            const snapshot = await db.collection('salaries').where('uid', '==', currentUser.uid).get();
-            const allData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const snap = await db.collection('salaries').where('uid', '==', currentUser.uid).get();
+            const allData = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+            const startDate = new Date(filterYear, filterMonth - 2, 26); 
+            const endDate = new Date(filterYear, filterMonth - 1, 25);
 
             const yearlyIncome = Array(12).fill(0);
             allData.forEach(item => {
-                const [y, m] = item.date.split('-');
-                if (y === filterYear) yearlyIncome[parseInt(m)-1] += item.total;
+                if (item.date) {
+                    const d = new Date(item.date);
+                    let tMonth = d.getDate() > 25 ? d.getMonth() + 1 : d.getMonth();
+                    let tYear = d.getFullYear();
+                    if (tMonth > 11) { tMonth = 0; tYear++; }
+                    if (tYear === filterYear) yearlyIncome[tMonth] += (item.total || 0);
+                }
             });
             initChart(yearlyIncome);
 
             salaryData = allData.filter(item => {
-                const [y, m] = item.date.split('-');
-                return y === filterYear && m === filterMonth;
+                if (!item.date) return false;
+                const d = new Date(item.date);
+                return d >= startDate && d <= endDate;
             }).sort((a,b) => new Date(b.date) - new Date(a.date));
 
-            renderHistory();
-            updateStats();
-        } catch (e) { showToast("Gagal muat data", "error"); }
-        finally { showLoading(false); }
+            renderHistory(); updateStats();
+        } catch (e) { if(!silent) showToast("Gagal muat data", "error"); } finally { if(!silent) showLoading(false); }
     }
 
     function updateStats() {
-        let income = 0, r = 0, p = 0, tr = 0, tp = 0, s = 0;
-        
-        // Logika Nama Bulan
-        const monthNames = [
-            "Januari", "Februari", "Maret", "April", "Mei", "Juni",
-            "Juli", "Agustus", "September", "Oktober", "November", "Desember"
-        ];
-        
-        const selectedMonthIndex = parseInt(document.getElementById('filter-month').value) - 1;
-        const selectedYear = document.getElementById('filter-year').value;
-        
-        const labelElement = document.getElementById('income-label');
-        if (labelElement) {
-            labelElement.textContent = `Pendapatan ${monthNames[selectedMonthIndex]} ${selectedYear}`;
-        }
+        let inc = 0, r = 0, p = 0, tr = 0, tp = 0, s = 0, gc = 0, trn = 0;
+        const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni","Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+        const mIdx = parseInt(document.getElementById('filter-month').value) - 1;
+        const prevIdx = mIdx === 0 ? 11 : mIdx - 1;
+        document.getElementById('income-label').textContent = `Periode 26 ${months[prevIdx].substring(0,3)} - 25 ${months[mIdx].substring(0,3)}`;
 
         salaryData.forEach(item => {
-            income += item.total;
-            r += item.regular; p += item.private; s += (item.special || 0);
-            tr += (item.trial_reg || 0); tp += (item.trial_priv || 0);
+            inc += (item.total || 0); r += (item.regular || 0); p += (item.private || 0); s += (item.special || 0);
+            tr += (item.trial_reg || 0); tp += (item.trial_priv || 0); gc += (item.gc || 0); trn += (item.training || 0);
         });
 
-        const extra = salaryData.length > 0 ? (userRates.training + userRates.gc) : 0;
-        
-        document.getElementById('monthly-income').textContent = formatCurrency(income + extra);
+        document.getElementById('monthly-income').textContent = formatCurrency(inc);
         document.getElementById('total-regular').textContent = r;
         document.getElementById('total-private').textContent = p;
         document.getElementById('total-special').textContent = s;
         document.getElementById('total-trial-reg').textContent = tr;
         document.getElementById('total-trial-priv').textContent = tp;
-        document.getElementById('total-extra').textContent = formatCurrency(extra);
+        document.getElementById('total-gc').textContent = gc;
+        document.getElementById('total-training').textContent = trn;
     }
 
     function renderHistory() {
         const tbody = document.getElementById('history-table');
-        if (salaryData.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="8" class="text-center py-10 opacity-30">Belum ada data</td></tr>`;
-            return;
-        }
+        if (salaryData.length === 0) { tbody.innerHTML = `<tr><td colspan="10" class="py-10 opacity-30">Tidak ada data</td></tr>`; return; }
         tbody.innerHTML = salaryData.map(item => `
-            <tr class="border-b border-white/5 hover:bg-white/5 transition-all">
-                <td class="py-4 px-2 font-medium">${new Date(item.date).getDate()}</td>
-                <td class="text-center text-blue-400">${item.regular}</td>
-                <td class="text-center text-purple-400">${item.private}</td>
-                <td class="text-center text-amber-400">${item.special || 0}</td>
-                <td class="text-center text-orange-400">${item.trial_reg || 0}</td>
-                <td class="text-center text-red-400">${item.trial_priv || 0}</td>
-                <td class="text-right font-bold text-green-400">${formatCurrency(item.total)}</td>
-                <td class="py-4 px-2">
-                    <div class="flex justify-center gap-3">
-                        <button onclick="editEntry('${item.id}')" class="hover:scale-110 transition-transform">✏️</button>
-                        <button onclick="confirmDelete('${item.id}')" class="hover:scale-110 transition-transform">🗑️</button>
-                    </div>
-                </td>
+            <tr class="border-b border-white/5 hover:bg-white/5 transition-all text-center">
+                <td class="py-4 px-2 text-left font-semibold text-[10px] sm:text-xs text-gray-300">${new Date(item.date).toLocaleDateString('id-ID', {day:'numeric', month:'short', year:'numeric'})}</td>
+                <td class="text-blue-400">${item.regular || 0}</td><td class="text-purple-400">${item.private || 0}</td><td class="text-amber-400">${item.special || 0}</td>
+                <td class="text-orange-400">${item.trial_reg || 0}</td><td class="text-red-400">${item.trial_priv || 0}</td><td class="text-indigo-400">${item.gc || 0}</td><td class="text-pink-400">${item.training || 0}</td>
+                <td class="text-right font-bold text-green-400">${formatCurrency(item.total || 0)}</td>
+                <td><div class="flex justify-center gap-2"><button onclick="editEntry('${item.id}')">✏️</button><button onclick="confirmDelete('${item.id}')">🗑️</button></div></td>
             </tr>
         `).join('');
     }
 
-    function confirmDelete(id) {
-        deleteTargetId = id;
-        document.getElementById('delete-modal').classList.replace('hidden', 'flex');
-    }
-
-    function closeDeleteModal() {
-        deleteTargetId = null;
-        document.getElementById('delete-modal').classList.replace('flex', 'hidden');
-    }
-
-    document.getElementById('confirm-delete-btn').onclick = async () => {
-        if(!deleteTargetId) return;
-        showLoading(true);
-        try { 
-            await db.collection('salaries').doc(deleteTargetId).delete(); 
-            loadSalaryData(); 
-            closeDeleteModal(); 
-            showToast("Data terhapus!"); 
-        } catch(e) { showToast("Gagal hapus", "error"); }
-        finally { showLoading(false); }
-    };
-
-    document.getElementById('salary-form').addEventListener('submit', async (e) => {
+    // ==========================================
+    // SAVE LOGIC WITH ANTI-DUPLICATE
+    // ==========================================
+    document.getElementById('salary-form').onsubmit = async (e) => {
         e.preventDefault();
+        const btn = document.getElementById('submit-btn');
         const editId = document.getElementById('edit-id').value;
         const date = document.getElementById('input-date').value;
+        
+        if (!editId) {
+            const check = await db.collection('salaries').where('uid', '==', currentUser.uid).where('date', '==', date).get();
+            if (!check.empty) { showToast("Tanggal ini sudah ada datanya!", "error"); return; }
+        }
+
         const r = parseInt(document.getElementById('input-regular').value) || 0;
         const p = parseInt(document.getElementById('input-private').value) || 0;
         const s = parseInt(document.getElementById('input-special').value) || 0;
         const tr = parseInt(document.getElementById('input-trial-reg').value) || 0;
         const tp = parseInt(document.getElementById('input-trial-priv').value) || 0;
+        const gc = parseInt(document.getElementById('input-gc').value) || 0;
+        const trn = parseInt(document.getElementById('input-training').value) || 0;
         
-        const total = (r * userRates.regular) + (p * userRates.private) + (s * userRates.special) + (tr * userRates.trial_reg) + (tp * userRates.trial_priv);
+        const total = (r * userRates.regular) + (p * userRates.private) + (s * userRates.special) + (tr * userRates.trial_reg) + (tp * userRates.trial_priv) + (gc * userRates.gc) + (trn * userRates.training);
 
-        const data = { 
-            uid: currentUser.uid, date, regular: r, private: p, special: s, 
-            trial_reg: tr, trial_priv: tp, total, 
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp() 
-        };
+        if (total === 0) { showToast("Isi minimal 1 data!", "error"); return; }
+        btn.disabled = true; showLoading(true);
+        const data = { uid: currentUser.uid, date, regular: r, private: p, special: s, trial_reg: tr, trial_priv: tp, gc, training: trn, total, updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
         
-        showLoading(true);
         try {
             if (editId) await db.collection('salaries').doc(editId).update(data);
             else await db.collection('salaries').add({ ...data, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
-            resetForm(); 
-            loadSalaryData(); 
-            showToast("Tersimpan!");
-        } catch (e) { showToast("Gagal simpan", "error"); }
-        finally { showLoading(false); }
-    });
+            resetForm(); showToast("Berhasil!"); loadSalaryData(true);
+        } catch (err) { showToast("Gagal simpan", "error"); } finally { showLoading(false); btn.disabled = false; }
+    };
 
-    function updateEstimatedTotal() {
-        const r = parseInt(document.getElementById('input-regular').value) || 0;
-        const p = parseInt(document.getElementById('input-private').value) || 0;
-        const s = parseInt(document.getElementById('input-special').value) || 0;
-        const tr = parseInt(document.getElementById('input-trial-reg').value) || 0;
-        const tp = parseInt(document.getElementById('input-trial-priv').value) || 0;
-        const total = (r * userRates.regular) + (p * userRates.private) + (s * userRates.special) + (tr * userRates.trial_reg) + (tp * userRates.trial_priv);
-        document.getElementById('estimated-total').textContent = formatCurrency(total);
+    async function generatePDF() {
+        const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'mm', 'a4');
+        const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni","Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+        const mIdx = parseInt(document.getElementById('filter-month').value) - 1;
+        const year = document.getElementById('filter-year').value;
+        const prevIdx = mIdx === 0 ? 11 : mIdx - 1;
+        const periodText = `Periode: 26 ${months[prevIdx].substring(0,3)} - 25 ${months[mIdx].substring(0,3)} ${year}`;
+
+        doc.setFontSize(22); doc.setTextColor(99, 102, 241); doc.text("ROZORA MALANG", 105, 20, null, null, "center");
+        doc.setFontSize(10); doc.setTextColor(100); doc.text("Laporan Pendapatan Mengajar", 105, 26, null, null, "center");
+        doc.line(20, 30, 190, 30);
+        doc.setFontSize(11); doc.setTextColor(0); doc.text(periodText, 20, 40);
+        doc.text(`Dicetak: ${new Date().toLocaleDateString('id-ID')}`, 190, 40, null, null, "right");
+
+        const rows = salaryData.map(item => [
+            new Date(item.date).toLocaleDateString('id-ID', {day:'numeric', month:'short', year:'numeric'}),
+            item.regular || 0, item.private || 0, item.special || 0, item.trial_reg || 0, item.trial_priv || 0, item.gc || 0, item.training || 0,
+            `Rp ${(item.total || 0).toLocaleString('id-ID')}`
+        ]);
+
+        doc.autoTable({
+            startY: 45, head: [['Tanggal', 'R', 'P', 'S', 'TR', 'TP', 'GC', 'TN', 'Total']], body: rows,
+            theme: 'grid', headStyles: { fillColor: [99, 102, 241], halign: 'center' }, styles: { fontSize: 8 }
+        });
+
+        let tR=0, tP=0, tS=0, tTR=0, tTP=0, tGC=0, tTN=0, tTotal=0;
+        salaryData.forEach(i => { tR+=i.regular||0; tP+=i.private||0; tS+=i.special||0; tTR+=i.trial_reg||0; tTP+=i.trial_priv||0; tGC+=i.gc||0; tTN+=i.training||0; tTotal+=i.total||0; });
+
+        doc.setFontSize(11); doc.text("RINGKASAN TOTAL:", 20, doc.lastAutoTable.finalY + 10);
+        const summ = [
+            ["Reguler", tR, "Trial Reg", tTR], ["Private", tP, "Trial Priv", tTP],
+            ["Spesial", tS, "Gen Class", tGC], ["Training", tTN, "TOTAL", `Rp ${tTotal.toLocaleString('id-ID')}`]
+        ];
+        doc.autoTable({ startY: doc.lastAutoTable.finalY + 15, body: summ, theme: 'plain', styles: { fontStyle: 'bold' } });
+        doc.save(`Laporan_Rozora_${months[mIdx]}_${year}.pdf`);
     }
 
-    // ==========================================
-    // HELPERS & UI
-    // ==========================================
-    function initChart(yearlyData) {
+    function initChart(data) {
         const ctx = document.getElementById('incomeChart').getContext('2d');
         if (incomeChart) incomeChart.destroy();
         incomeChart = new Chart(ctx, {
             type: 'line',
-            data: {
-                labels: ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'],
-                datasets: [{ data: yearlyData, borderColor: '#6366f1', tension: 0.4, fill: true, backgroundColor: 'rgba(99,102,241,0.1)' }]
-            },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false } } } }
+            data: { labels: ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'], datasets: [{ data, borderColor: '#6366f1', tension: 0.4, fill: true, backgroundColor: 'rgba(99,102,241,0.1)', pointBackgroundColor: '#06b6d4' }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { ticks: { color: '#94a3b8', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,0.05)' } }, x: { ticks: { color: '#94a3b8', font: { size: 9 } }, grid: { display: false } } } }
         });
     }
 
     function showToast(msg, type='success') {
         const t = document.createElement('div');
-        t.className = `toast p-4 rounded-xl text-white ${type==='success'?'bg-green-500':'bg-red-500'} shadow-lg`;
-        t.textContent = msg;
-        document.getElementById('toast-container').appendChild(t);
+        t.className = `toast p-4 rounded-xl text-white ${type==='success'?'bg-green-500':'bg-red-500'} shadow-lg text-xs font-bold`;
+        t.textContent = msg; document.getElementById('toast-container').appendChild(t);
         setTimeout(() => t.remove(), 3000);
     }
 
     function showLoading(s) { document.getElementById('loading-overlay').classList.toggle('hidden', !s); document.getElementById('loading-overlay').classList.toggle('flex', s); }
-    function formatCurrency(n) { return 'Rp ' + n.toLocaleString('id-ID'); }
+    function formatCurrency(n) { return 'Rp ' + (n || 0).toLocaleString('id-ID'); }
     function showAuth() { document.getElementById('auth-container').classList.remove('hidden'); document.getElementById('dashboard-container').classList.add('hidden'); }
+    
+    // UPDATE LOGIKA DASHBOARD (YEAR GENERATOR)
     function showDashboard() { 
         document.getElementById('auth-container').classList.add('hidden'); 
         document.getElementById('dashboard-container').classList.remove('hidden'); 
-        const cy = new Date().getFullYear();
-        document.getElementById('filter-year').innerHTML = [cy, cy-1].map(y => `<option value="${y}">${y}</option>`).join('');
+        
+        // --- LOGIKA GENERATE TAHUN OTOMATIS ---
+        const filterYearSelect = document.getElementById('filter-year');
+        const currentYear = new Date().getFullYear();
+        let options = '';
+        // Generate dari 5 tahun ke depan sampai 2 tahun ke belakang (arsip)
+        for (let i = currentYear + 5; i >= currentYear - 2; i--) {
+            options += `<option value="${i}" ${i === currentYear ? 'selected' : ''}>${i}</option>`;
+        }
+        filterYearSelect.innerHTML = options;
+        // --------------------------------------
+
         document.getElementById('filter-month').value = String(new Date().getMonth() + 1).padStart(2, '0');
         document.getElementById('input-date').value = new Date().toLocaleDateString('en-CA');
+        lucide.createIcons();
     }
+
     function logout() { auth.signOut(); }
     function showRegister() { document.getElementById('login-page').classList.add('hidden'); document.getElementById('register-page').classList.remove('hidden'); }
     function showLogin() { document.getElementById('login-page').classList.remove('hidden'); document.getElementById('register-page').classList.add('hidden'); }
     
     function editEntry(id) {
-        const item = salaryData.find(d => d.id === id);
-        if(!item) return;
-        document.getElementById('edit-id').value = id;
-        document.getElementById('input-date').value = item.date;
-        document.getElementById('input-regular').value = item.regular;
-        document.getElementById('input-private').value = item.private;
-        document.getElementById('input-special').value = item.special || 0;
-        document.getElementById('input-trial-reg').value = item.trial_reg || 0;
-        document.getElementById('input-trial-priv').value = item.trial_priv || 0;
+        const i = salaryData.find(d => d.id === id); if(!i) return;
+        document.getElementById('edit-id').value = id; document.getElementById('input-date').value = i.date;
+        document.getElementById('input-regular').value = i.regular || 0;
+        document.getElementById('input-private').value = i.private || 0;
+        document.getElementById('input-special').value = i.special || 0;
+        document.getElementById('input-trial-reg').value = i.trial_reg || 0;
+        document.getElementById('input-trial-priv').value = i.trial_priv || 0;
+        document.getElementById('input-gc').value = i.gc || 0;
+        document.getElementById('input-training').value = i.training || 0;
         document.getElementById('form-title').textContent = "Edit Data";
         document.getElementById('cancel-edit-btn').classList.remove('hidden');
-        updateEstimatedTotal();
         window.scrollTo({top: 0, behavior: 'smooth'});
     }
 
     function resetForm() {
-        document.getElementById('salary-form').reset();
-        document.getElementById('edit-id').value = "";
+        document.getElementById('salary-form').reset(); document.getElementById('edit-id').value = "";
         document.getElementById('form-title').textContent = "Input Kelas";
         document.getElementById('cancel-edit-btn').classList.add('hidden');
         document.getElementById('input-date').value = new Date().toLocaleDateString('en-CA');
-        updateEstimatedTotal();
     }
     
     function cancelEdit() { resetForm(); }
+    function confirmDelete(id) { deleteTargetId = id; document.getElementById('delete-modal').classList.replace('hidden', 'flex'); }
+    function closeDeleteModal() { deleteTargetId = null; document.getElementById('delete-modal').classList.replace('flex', 'hidden'); }
+    document.getElementById('confirm-delete-btn').onclick = async () => {
+        showLoading(true); try { await db.collection('salaries').doc(deleteTargetId).delete(); loadSalaryData(true); closeDeleteModal(); showToast("Terhapus"); }
+        catch(e) { showToast("Gagal hapus", "error"); } finally { showLoading(false); }
+    };
 
-    ['regular','private','special','trial-reg','trial-priv'].forEach(id => {
-        document.getElementById(`input-${id}`).addEventListener('input', updateEstimatedTotal);
-    });
-
-    document.addEventListener('DOMContentLoaded', () => { lucide.createIcons(); initApp(); });
+    document.addEventListener('DOMContentLoaded', initApp);
   </script>
 </body>
 </html>
