@@ -55,7 +55,6 @@
           <p class="text-gray-400 mt-6 text-sm">Belum punya akun? <button onclick="showRegister()" class="text-primary font-medium">Daftar</button></p>
         </div>
       </div>
-      <!-- Register Form -->
       <div id="register-page" class="w-full max-w-md hidden">
         <div class="glass rounded-3xl p-8 glow text-center">
             <h1 class="text-3xl font-bold bg-gradient-to-r from-secondary to-accent bg-clip-text text-transparent">Buat Akun</h1>
@@ -93,7 +92,7 @@
         <!-- Main Stats -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <div class="glass rounded-2xl p-5 border-l-4 border-green-500">
-            <span class="text-gray-400 text-xs uppercase">Pendapatan Bulan Ini</span>
+            <span id="income-label" class="text-gray-400 text-xs uppercase">Pendapatan Bulan Ini</span>
             <p id="monthly-income" class="text-2xl font-bold text-green-400">Rp 0</p>
           </div>
           <div class="glass rounded-2xl p-5 border-l-4 border-blue-500">
@@ -193,21 +192,28 @@
         </div>
     </div>
 
-    <!-- Delete Modal & Loading -->
+    <!-- Modal Hapus -->
     <div id="delete-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
         <div class="glass rounded-2xl p-6 max-w-sm w-full text-center">
             <h3 class="text-xl font-bold mb-6">Hapus Data?</h3>
-            <div class="flex gap-3"><button onclick="closeDeleteModal()" class="flex-1 bg-gray-700 py-3 rounded-xl">Batal</button><button id="confirm-delete-btn" class="flex-1 bg-red-500 py-3 rounded-xl font-bold">Hapus</button></div>
+            <div class="flex gap-3">
+                <button onclick="closeDeleteModal()" class="flex-1 bg-gray-700 py-3 rounded-xl">Batal</button>
+                <button id="confirm-delete-btn" class="flex-1 bg-red-500 py-3 rounded-xl font-bold">Hapus</button>
+            </div>
         </div>
     </div>
+
     <div id="loading-overlay" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/60 backdrop-blur-sm">
-        <div class="glass rounded-2xl p-8 flex flex-col items-center"><div class="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div><p class="text-xs">Processing...</p></div>
+        <div class="glass rounded-2xl p-8 flex flex-col items-center">
+            <div class="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p class="text-xs">Processing...</p>
+        </div>
     </div>
   </div>
 
   <script>
     // ==========================================
-    // INITIAL SETUP
+    // INITIAL SETUP & DATA
     // ==========================================
     let userRates = { regular: 20000, private: 25000, special: 50000, trial_reg: 15000, trial_priv: 20000, training: 0, gc: 0 };
     const firebaseConfig = {
@@ -250,7 +256,8 @@
 
     function showSettingsModal() {
         ['regular','private','special','trial-reg','trial-priv','training','gc'].forEach(id => {
-            document.getElementById(`set-${id}`).value = userRates[id.replace('-','_')] || 0;
+            const key = id.replace('-','_');
+            document.getElementById(`set-${id}`).value = userRates[key] || 0;
         });
         document.getElementById('settings-modal').classList.replace('hidden', 'flex');
     }
@@ -280,7 +287,7 @@
     }
 
     // ==========================================
-    // CORE LOGIC
+    // CORE LOGIC (CRUD)
     // ==========================================
     async function loadSalaryData() {
         if (!currentUser) return;
@@ -291,7 +298,6 @@
             const snapshot = await db.collection('salaries').where('uid', '==', currentUser.uid).get();
             const allData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-            // Update Yearly Chart
             const yearlyIncome = Array(12).fill(0);
             allData.forEach(item => {
                 const [y, m] = item.date.split('-');
@@ -299,7 +305,6 @@
             });
             initChart(yearlyIncome);
 
-            // Filter Table
             salaryData = allData.filter(item => {
                 const [y, m] = item.date.split('-');
                 return y === filterYear && m === filterMonth;
@@ -312,17 +317,34 @@
     }
 
     function updateStats() {
-        let income = 0, r = 0, p = 0, tr = 0, tp = 0;
+        let income = 0, r = 0, p = 0, tr = 0, tp = 0, s = 0;
+        
+        // Logika Nama Bulan
+        const monthNames = [
+            "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+            "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+        ];
+        
+        const selectedMonthIndex = parseInt(document.getElementById('filter-month').value) - 1;
+        const selectedYear = document.getElementById('filter-year').value;
+        
+        const labelElement = document.getElementById('income-label');
+        if (labelElement) {
+            labelElement.textContent = `Pendapatan ${monthNames[selectedMonthIndex]} ${selectedYear}`;
+        }
+
         salaryData.forEach(item => {
             income += item.total;
-            r += item.regular; p += item.private;
+            r += item.regular; p += item.private; s += (item.special || 0);
             tr += (item.trial_reg || 0); tp += (item.trial_priv || 0);
         });
+
         const extra = salaryData.length > 0 ? (userRates.training + userRates.gc) : 0;
         
         document.getElementById('monthly-income').textContent = formatCurrency(income + extra);
         document.getElementById('total-regular').textContent = r;
         document.getElementById('total-private').textContent = p;
+        document.getElementById('total-special').textContent = s;
         document.getElementById('total-trial-reg').textContent = tr;
         document.getElementById('total-trial-priv').textContent = tp;
         document.getElementById('total-extra').textContent = formatCurrency(extra);
@@ -339,14 +361,41 @@
                 <td class="py-4 px-2 font-medium">${new Date(item.date).getDate()}</td>
                 <td class="text-center text-blue-400">${item.regular}</td>
                 <td class="text-center text-purple-400">${item.private}</td>
-                <td class="text-center text-amber-400">${item.special}</td>
+                <td class="text-center text-amber-400">${item.special || 0}</td>
                 <td class="text-center text-orange-400">${item.trial_reg || 0}</td>
                 <td class="text-center text-red-400">${item.trial_priv || 0}</td>
                 <td class="text-right font-bold text-green-400">${formatCurrency(item.total)}</td>
-                <td class="text-center"><button onclick="editEntry('${item.id}')">✏️</button></td>
+                <td class="py-4 px-2">
+                    <div class="flex justify-center gap-3">
+                        <button onclick="editEntry('${item.id}')" class="hover:scale-110 transition-transform">✏️</button>
+                        <button onclick="confirmDelete('${item.id}')" class="hover:scale-110 transition-transform">🗑️</button>
+                    </div>
+                </td>
             </tr>
         `).join('');
     }
+
+    function confirmDelete(id) {
+        deleteTargetId = id;
+        document.getElementById('delete-modal').classList.replace('hidden', 'flex');
+    }
+
+    function closeDeleteModal() {
+        deleteTargetId = null;
+        document.getElementById('delete-modal').classList.replace('flex', 'hidden');
+    }
+
+    document.getElementById('confirm-delete-btn').onclick = async () => {
+        if(!deleteTargetId) return;
+        showLoading(true);
+        try { 
+            await db.collection('salaries').doc(deleteTargetId).delete(); 
+            loadSalaryData(); 
+            closeDeleteModal(); 
+            showToast("Data terhapus!"); 
+        } catch(e) { showToast("Gagal hapus", "error"); }
+        finally { showLoading(false); }
+    };
 
     document.getElementById('salary-form').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -360,13 +409,19 @@
         
         const total = (r * userRates.regular) + (p * userRates.private) + (s * userRates.special) + (tr * userRates.trial_reg) + (tp * userRates.trial_priv);
 
-        const data = { uid: currentUser.uid, date, regular: r, private: p, special: s, trial_reg: tr, trial_priv: tp, total, updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+        const data = { 
+            uid: currentUser.uid, date, regular: r, private: p, special: s, 
+            trial_reg: tr, trial_priv: tp, total, 
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp() 
+        };
         
         showLoading(true);
         try {
             if (editId) await db.collection('salaries').doc(editId).update(data);
             else await db.collection('salaries').add({ ...data, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
-            resetForm(); loadSalaryData(); showToast("Tersimpan!");
+            resetForm(); 
+            loadSalaryData(); 
+            showToast("Tersimpan!");
         } catch (e) { showToast("Gagal simpan", "error"); }
         finally { showLoading(false); }
     });
@@ -382,7 +437,7 @@
     }
 
     // ==========================================
-    // HELPERS
+    // HELPERS & UI
     // ==========================================
     function initChart(yearlyData) {
         const ctx = document.getElementById('incomeChart').getContext('2d');
@@ -427,7 +482,7 @@
         document.getElementById('input-date').value = item.date;
         document.getElementById('input-regular').value = item.regular;
         document.getElementById('input-private').value = item.private;
-        document.getElementById('input-special').value = item.special;
+        document.getElementById('input-special').value = item.special || 0;
         document.getElementById('input-trial-reg').value = item.trial_reg || 0;
         document.getElementById('input-trial-priv').value = item.trial_priv || 0;
         document.getElementById('form-title').textContent = "Edit Data";
@@ -445,6 +500,8 @@
         updateEstimatedTotal();
     }
     
+    function cancelEdit() { resetForm(); }
+
     ['regular','private','special','trial-reg','trial-priv'].forEach(id => {
         document.getElementById(`input-${id}`).addEventListener('input', updateEstimatedTotal);
     });
