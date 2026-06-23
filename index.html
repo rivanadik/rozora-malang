@@ -49,11 +49,12 @@
             <input type="password" id="login-password" placeholder="Password" required class="w-full bg-dark/50 border border-gray-700 rounded-xl py-3 px-4 text-white">
             <button type="submit" class="w-full bg-gradient-to-r from-primary to-secondary font-semibold py-3 rounded-xl hover:scale-[1.02] transition-all">Masuk</button>
           </form>
-          <!-- Lupa Password -->
+          <!-- Lupa Password & Daftar -->
           <p class="text-gray-400 mt-4 text-sm">
             <button onclick="showForgotPassword()" class="text-accent hover:underline font-medium">Lupa Password?</button>
           </p>
-          <p class="text-gray-400 mt-2 text-sm">Belum punya akun? <button onclick="showRegister()" class="text-primary font-medium">Daftar</button></p>
+          <p class="text-gray-400 mt-2 text-sm">Belum punya akun? <button onclick="promptRegisterCode()" class="text-primary font-medium hover:underline">Daftar</button></p>
+          <p class="text-gray-600 mt-2 text-xs">Belum punya kode akses? <a href="https://wa.me/6281216523102?text=Selamat%2C%20saya%20mau%20register%20akun%20Rozora%20Malang.%20Terima%20kasih." target="_blank" class="text-green-500 hover:underline font-medium">Hubungi Admin via WhatsApp</a></p>
         </div>
       </div>
 
@@ -80,7 +81,7 @@
                 <input type="text" id="register-name" placeholder="Nama Lengkap" required class="w-full bg-dark/50 border border-gray-700 rounded-xl py-3 px-4 text-white">
                 <input type="email" id="register-email" placeholder="Email" required class="w-full bg-dark/50 border border-gray-700 rounded-xl py-3 px-4 text-white">
                 <input type="password" id="register-password" placeholder="Password" required class="w-full bg-dark/50 border border-gray-700 rounded-xl py-3 px-4 text-white">
-                <!-- <button type="submit" class="w-full bg-gradient-to-r from-secondary to-accent font-semibold py-3 rounded-xl transition-all">Daftar</button> -->
+                <button type="submit" class="w-full bg-gradient-to-r from-secondary to-accent font-semibold py-3 rounded-xl transition-all text-white">Daftar</button>
             </form>
             <button onclick="showLogin()" class="mt-4 text-gray-400 text-sm">Kembali</button>
         </div>
@@ -485,6 +486,12 @@
     }
 
     function logout() { auth.signOut(); }
+    function promptRegisterCode() {
+        const kode = prompt("Masukkan kode akses untuk mendaftar:");
+        if (kode === null) return;
+        if (kode === 'rivan2026') { showRegister(); }
+        else { showToast("Kode akses salah!", "error"); }
+    }
     function showRegister() { document.getElementById('login-page').classList.add('hidden'); document.getElementById('register-page').classList.remove('hidden'); document.getElementById('forgot-page').classList.add('hidden'); }
     function showLogin() { document.getElementById('login-page').classList.remove('hidden'); document.getElementById('register-page').classList.add('hidden'); document.getElementById('forgot-page').classList.add('hidden'); }
     function showForgotPassword() { document.getElementById('login-page').classList.add('hidden'); document.getElementById('register-page').classList.add('hidden'); document.getElementById('forgot-page').classList.remove('hidden'); lucide.createIcons(); }
